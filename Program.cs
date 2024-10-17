@@ -1,29 +1,29 @@
 ﻿using System.Reactive.Linq;
 
-Enumerable.Range(1, 100)
-    .ToObservable()
-    .Subscribe(Console.WriteLine);
+// Uses current SynchronizationContext; SubscribeOn & ObserveOn
 
+var eventSource = new SomeEventSource();
+// Observable.FromEventPattern<SomeEventArg>(eventSource, nameof(SomeEventSource.OnEvent));
+Observable.FromEventPattern<EventHandler<SomeEventArg>, SomeEventArg>(
+        h => eventSource.OnEvent += h,
+        h => eventSource.OnEvent -= h)
+    .Select(x => x.EventArgs.When)
+    .Subscribe(when => Console.WriteLine(when));
 
-foreach (var answer in Observable.Range(1, 100).ToEnumerable())
+// Execute
+eventSource.Trigger();
+await Task.Delay(TimeSpan.FromSeconds(1));
+eventSource.Trigger();
+await Task.Delay(TimeSpan.FromSeconds(2));
+eventSource.Trigger();
+
+public class SomeEventArg : EventArgs 
 {
-    Console.WriteLine(answer);
+    public DateTime When {get;set;} = DateTime.Now;
 }
+class SomeEventSource
+{
+    public event EventHandler<SomeEventArg>? OnEvent;
 
-#region nuget:System.Linq.Async
-
-// var asyncEnumerableObservable = Observable.Range(0, 100).ToAsyncEnumerable();
-// await foreach (var answer in asyncEnumerableObservable)
-// {
-//     Console.WriteLine(answer);
-// }
-// 
-// https://github.com/dotnet/reactive/blob/main/Ix.NET/Source/System.Linq.Async/System/Linq/Operators/ToAsyncEnumerable.Observable.cs
-
-// var observableAsyncEnumerable = AsyncEnumerable.Range(1,100)
-//      .ToObservable();
-//
-// https://github.com/dotnet/reactive/blob/main/Ix.NET/Source/System.Linq.Async/System/Linq/Operators/Range.cs
-// https://github.com/dotnet/reactive/blob/main/Ix.NET/Source/System.Linq.Async/System/Linq/Operators/ToObservable.cs
-
-# endregion
+    public void Trigger() => OnEvent?.Invoke(this, new());
+}
