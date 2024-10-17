@@ -1,23 +1,17 @@
 ﻿using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 
 
-var coldObservable = Observable.Return(42);
+var observableAnswer = await Observable.Return(42);
+var taskAnswer = await RequestAnswerOnMeaningOfLifeAsync();
 
-coldObservable.Subscribe(answer => 
-    {
-        Console.WriteLine("Answer to the Ultimate Question of Life, the Universe, and Everything:");
-        Console.WriteLine(answer);        
-    });
+// In fact, we can cast a Task to an Observable
+var observableTask = await RequestAnswerOnMeaningOfLifeAsync().ToObservable();
 
-coldObservable.Subscribe(answer => 
-    {
-        Console.WriteLine("I said; Answer to the Ultimate Question of Life, the Universe, and Everything:");
-        Console.WriteLine(answer);        
-    });
+Console.WriteLine($"Answer from observable is: {observableAnswer}");
+Console.WriteLine($"Answer from task is: {taskAnswer}");
+Console.WriteLine($"Answer from observable task is: {observableTask}");
 
-coldObservable.Subscribe(answer => 
-    {
-        Console.WriteLine("ARE YOU DEAF?!");
-        Console.WriteLine(answer);        
-        Console.WriteLine("OKAY?!");
-    });
+
+Task<int> RequestAnswerOnMeaningOfLifeAsync() =>
+    Task.FromResult(42);
