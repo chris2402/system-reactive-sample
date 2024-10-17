@@ -1,33 +1,23 @@
-﻿using System.Reactive.Disposables;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 
 
-var answerFromDeepThought = Observable.Return(42);
+var coldObservable = Observable.Return(42);
 
-var answerFromUnivac = Observable.Never<int>();
+coldObservable.Subscribe(answer => 
+    {
+        Console.WriteLine("Answer to the Ultimate Question of Life, the Universe, and Everything:");
+        Console.WriteLine(answer);        
+    });
 
-var answerFromMyMachine = Observable.Throw<int>(new NotYourMachineException());
+coldObservable.Subscribe(answer => 
+    {
+        Console.WriteLine("I said; Answer to the Ultimate Question of Life, the Universe, and Everything:");
+        Console.WriteLine(answer);        
+    });
 
-var answerFromChatGpt = Observable.Create<int>(observer => 
-{
-    observer.OnNext(42);
-    observer.OnNext(69);
-    observer.OnNext(420);
-    observer.OnNext(1337);
-    return Disposable.Empty;
-});
-
-Dictionary<string, IObservable<int>> observables = new()
-{
-    ["DeepThought"] = answerFromDeepThought,
-    ["Univac"] = answerFromUnivac,
-    ["My Machine"] = answerFromMyMachine,
-    ["ChatGPT"] = answerFromChatGpt
-};
-
-foreach (var (n,o) in observables)
-    o.Subscribe(
-        x => Console.WriteLine($"{n} - {x}"),
-        exc => Console.WriteLine($"{n} - {exc.GetType().Name}"));
-
-class NotYourMachineException : Exception {}
+coldObservable.Subscribe(answer => 
+    {
+        Console.WriteLine("ARE YOU DEAF?!");
+        Console.WriteLine(answer);        
+        Console.WriteLine("OKAY?!");
+    });
