@@ -1,44 +1,19 @@
 ﻿using System.Reactive.Linq;
 
-// Uses current SynchronizationContext; SubscribeOn & ObserveOn
+Observable.Timer(TimeSpan.FromSeconds(1))
+    .Subscribe(i => Console.WriteLine($"Timer {i} time"));
 
-var eventSource = new SomeEventSource();
+Observable.Interval(TimeSpan.FromSeconds(1))
+    .Subscribe(i => Console.WriteLine($"Interval {i} time"));
 
-_ = Task.Run(async () => 
-{
-    while(true)
-    {
-        eventSource.Trigger();
-        await Task.Delay(TimeSpan.FromSeconds(1));
-    }
-});
+var intialState = 5;
+Observable.Generate(
+    intialState, 
+    state => state < 100,
+    state => state + 5,
+    state => state.ToString()
+    // ,state => TimeSpan.FromSeconds(0.5)
+    )
+    .Subscribe(i => Console.WriteLine($"(Timed)Generate {i} time"));
 
-var hotObservable = Observable.FromEventPattern<EventHandler<SomeEventArg>, SomeEventArg>(
-        h => eventSource.OnEvent += h,
-        h => eventSource.OnEvent -= h)
-    .Select(x => x.EventArgs.When);
-
-await Task.Run(() => 
-{
-    bool shouldSubscribe = true;
-    while (shouldSubscribe)
-    {
-        Console.WriteLine("Starting subscription, hit enter to unsubscribe");
-        var subscription = hotObservable.Subscribe(when => Console.WriteLine(when));
-        Console.ReadLine();
-        subscription.Dispose();
-        Console.WriteLine("Subscription stopped, resubscribe? [Y]/n");
-        shouldSubscribe = (Console.ReadLine() ?? "").Trim().ToUpper() != "N";
-    }
-});
-
-public class SomeEventArg : EventArgs 
-{
-    public DateTime When {get;set;} = DateTime.Now;
-}
-class SomeEventSource
-{
-    public event EventHandler<SomeEventArg>? OnEvent;
-
-    public void Trigger() => OnEvent?.Invoke(this, new());
-}
+await Task.Delay(6_000);
