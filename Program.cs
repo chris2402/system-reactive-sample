@@ -1,19 +1,21 @@
 ﻿using System.Reactive.Linq;
 
-Observable.Timer(TimeSpan.FromSeconds(1))
-    .Subscribe(i => Console.WriteLine($"Timer {i} time"));
+Observable.Range(0, 100)
+    .Buffer(5)
+    .Subscribe(buffer => 
+    {
+        Console.WriteLine(string.Join(',', buffer));
+    });
 
-Observable.Interval(TimeSpan.FromSeconds(1))
-    .Subscribe(i => Console.WriteLine($"Interval {i} time"));
+Console.ReadLine();
 
-var intialState = 5;
-Observable.Generate(
-    intialState, 
-    state => state < 100,
-    state => state + 5,
-    state => state.ToString()
-    // ,state => TimeSpan.FromSeconds(0.5)
-    )
-    .Subscribe(i => Console.WriteLine($"(Timed)Generate {i} time"));
+// Will only sometimes reach 5 events within the time window 
+Observable.Interval(TimeSpan.FromSeconds(0.21)) 
+    .Window(TimeSpan.FromSeconds(1), 5)
+    .SelectMany(window => window.ToArray())
+    .Subscribe(array => 
+    {
+        Console.WriteLine(string.Join(',', array));
+    });
 
-await Task.Delay(6_000);
+Console.ReadLine();
