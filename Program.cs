@@ -5,7 +5,8 @@ var observable = Observable.Defer(() => {
     Console.WriteLine($"Defered function is called '{timesDeferedCalled++}' times!");
     int i = 0;
     return Observable.Interval(TimeSpan.FromSeconds(1)).Take(3).Select(_ => i++);
-});
+})
+.Publish();
 
 
 Console.WriteLine("1. Subscribe;");
@@ -15,8 +16,16 @@ observable
     {
         Console.WriteLine($"{i} is arrived on First!");
     }, 
-    () => tsc1.SetResult());
+    () =>
+    {
+        Console.WriteLine("First is complete");
+        tsc1.SetResult();
+    });
 
+Console.WriteLine("Await 3000 ms before connecting");
+
+await Task.Delay(3000);
+observable.Connect();
 await tsc1.Task;
 
 var tsc2 = new TaskCompletionSource();
@@ -25,6 +34,10 @@ observable
     {
         Console.WriteLine($"{i} is arrived on Second!");
     }, 
-    () => tsc2.SetResult());
+    () =>
+    {
+        Console.WriteLine("Second is complete");
+        tsc2.SetResult();
+    });
 
 await tsc2.Task;
