@@ -6,11 +6,11 @@ var observable = Observable.Defer(() => {
     int i = 0;
     return Observable.Interval(TimeSpan.FromSeconds(1)).Take(3).Select(_ => i++);
 })
-.Publish();
+.Publish()
+.RefCount(); // !!!!!!!!!!!!!!!!!!!!!!!! Counts number of Subscribers!
 
 
 Console.WriteLine("1. Subscribe;");
-var tsc1 = new TaskCompletionSource();
 observable
     .Subscribe(i => 
     {
@@ -19,16 +19,14 @@ observable
     () =>
     {
         Console.WriteLine("First is complete");
-        tsc1.SetResult();
     });
 
 Console.WriteLine("Await 3000 ms before connecting");
 
-await Task.Delay(3000);
-observable.Connect();
-await tsc1.Task;
+// NB: COMMENTED OUT! await tsc1.Task;
 
 var tsc2 = new TaskCompletionSource();
+Console.WriteLine("2. Subscribe;");
 observable
     .Subscribe(i => 
     {
